@@ -1,0 +1,26 @@
+filebeat.modules:
+- module: nginx
+  access:
+    enabled: true
+    var.paths: ../../log/nginx/access.log
+
+
+filebeat.inputs:
+- type: log
+  enabled: truelosgtash  paths:
+#    - /var/log/messages
+#    - /var/log/nginx/*.log
+    - /home/user/stack-elk/log/nginx/*.log
+
+#output.elasticsearch:
+#  hosts: ["es01:9200"]
+#  username: "elastic"
+#  password: "<password>"
+
+output.logstash:
+  # Boolean flag to enable or disable the output module.
+  enabled: true
+  hosts: ["log01:5044"]
+
+setup.kibana:
+  host: "kib01:5601"

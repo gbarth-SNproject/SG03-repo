@@ -1,0 +1,40 @@
+filebeat.modules:
+- module: nginx
+  access:
+    enabled: true
+    var.paths: ["/home/user/stack-elk/log/nginx/access.log"]
+  error:
+    enabled: true
+    var.paths: ["/home/user/stack-elk/log/nginx/error.log"]
+
+
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+#    - /var/log/messages
+#    - /var/log/nginx/*.log
+    - /home/user/stack-elk/log/nginx/*.log
+
+#outdated dont use - gbh
+#filebeat.prospectors:
+#- paths:
+#  - /home/user/stack-elk/log/nginx/access.log
+#  tags: [nginx_access]
+#
+#- paths:
+#  - /home/user/stack-elk/log/nginx/error.log
+#  tags: [nginx_error]
+
+#output.elasticsearch:
+#  hosts: ["es01:9200"]
+#  username: "elastic"
+#  password: "<password>"
+
+output.logstash:
+  # Boolean flag to enable or disable the output module.
+  enabled: true
+  hosts: ["logstash"]
+
+setup.kibana:
+  host: "kibana:5601"

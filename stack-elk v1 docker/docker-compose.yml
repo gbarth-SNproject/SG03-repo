@@ -1,0 +1,102 @@
+version: '3.5'
+services:
+    nginx:
+        build: nginx
+        volumes:
+            - "./app:/var/www/html"
+            - "./log/nginx:/var/log/nginx"
+            - "./nginx/sites:/etc/nginx/sites-available"
+            - "./nginx/sites:/etc/nginx/sites-enabled"
+        ports:
+            - "${NGINX_PORT_HTTP}:80"
+            - "${NGINX_PORT_HTTPS}:443"
+   
+    elasticsearch:
+        build: elasticsearch
+        hostname: elasticsearch
+        environment:
+#            - node.name=es01
+            - cluster.name=es-docker-cluster
+            - discovery.seed_hosts=elasticsearch
+            - cluster.initial_master_nodes=elasticsearch
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        ports:
+            - 9200:9200
+
+#    es02:
+#        build: elasticsearch
+#        environment:
+#            - node.name=es02
+#            - cluster.name=es-docker-cluster
+#            - discovery.seed_hosts=es01,es03
+#            - cluster.initial_master_nodes=es01,es02,es03
+#            - bootstrap.memory_lock=true
+#            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#        ulimits:
+#            memlock:
+#                soft: -1
+#                hard: -1            
+#        ports:
+#            - 9201:9201
+
+#    es03:
+#        build: elasticsearch     
+#        environment:
+#            - node.name=es03
+#            - cluster.name=es-docker-cluster
+#            - discovery.seed_hosts=es01,es03
+#            - cluster.initial_master_nodes=es01,es02,es03
+#            - bootstrap.memory_lock=true
+#            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#        ulimits:
+#            memlock:
+#                soft: -1
+#                hard: -1        
+#        ports:
+#            - 9202:9202
+
+    kibana:
+        build: kibana
+        volumes:
+            - "./kibana/conf/kibana.yml:/usr/share/kibana/config/kibana.yml"
+        ports:
+            - 5601:5601
+#        environment:
+#            -  ELASTICSEARCH_URL: "http://es01:9200"
+#            -  ELASTICSEARCH_HOSTS: "http://es01:9200"
+#            - "LOGGING_QUIET=true"
+        links:
+            - elasticsearch         
+   
+    logstash:
+        build: logstash
+        links:
+            - elasticsearch
+        depends_on:
+            - elasticsearch
+#        environment:
+#            LOG_LEVEL: error
+        volumes:
+            - "./logstash/pipeline:/usr/share/logstash/pipeline"
+            - "./logstash/config:/usr/share/logstash/config"
+            - "./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml"
+            - "./logstash/logs:/usr/share/logstash/logs"
+        ports:
+            - 5044:5044
+
+        
+    filebeat:
+        build: filebeat
+        hostname: filebeat
+        volumes:
+            - "./filebeat/conf/filebeat.yml:/usr/share/filebeat/config/filebeat.yml"
+            - "./log/nginx:/var/log/nginx:ro"
+        links:
+            - logstash
+#        ports:
+#           - 5601:5601
